@@ -30,7 +30,6 @@ void processBatchInKernel(  char** d_data,
                             size_t pitch,
                             int lineSize,
                             int** d_result,
-                            int h_result[NB_ASCII],
                             int resultSize,
                             int totalResult[NB_ASCII],
                             int threadsPerBlock);
@@ -127,7 +126,6 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     // Allocate host memory
     char str[MAX_CHAR];
     char h_data[MAX_LINE][MAX_CHAR];
-    int h_result[NB_ASCII];
     int totalResult[NB_ASCII];
     int nbLine = 0;
     
@@ -137,7 +135,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
             printf("Loaded %i lines \n", nbLine);
 
-	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, h_result, resultSize, totalResult, threadsPerBlock);
+	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, totalResult, threadsPerBlock);
             
             nbLine = 0;
 		}
@@ -148,12 +146,12 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     printf("Loaded %i lines \n", nbLine);
 
-    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, h_result, resultSize, totalResult, threadsPerBlock);
+    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, totalResult, threadsPerBlock);
     
     fclose(inputFile);
     
     //write the output
-    writeOutputCSV(h_result, outputFileName);
+    writeOutputCSV(totalResult, outputFileName);
 
     // cleanup memory
     checkCudaErrors(cudaFree(d_data));
@@ -174,10 +172,11 @@ void processBatchInKernel(  char** d_data,
                             size_t pitch,
                             int lineSize,
                             int** d_result,
-                            int h_result[NB_ASCII],
                             int resultSize,
                             int totalResult[NB_ASCII],
                             int threadsPerBlock) {
+
+    int h_result[NB_ASCII];
 
     // Setup execution parameters
     dim3  grid((MAX_LINE + threadsPerBlock - 1) / threadsPerBlock, 1, 1);
