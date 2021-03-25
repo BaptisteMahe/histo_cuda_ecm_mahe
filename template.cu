@@ -211,7 +211,7 @@ void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
 
 	outputFile = fopen(outputFileName, "w+");
 	
-	for (int index = FIST_RELEVANT_ASCII; index =< LAST_RELEVANT_ASCII; index++) {
+	for (int index = FIST_RELEVANT_ASCII; index <= LAST_RELEVANT_ASCII; index++) {
 
         if (index >= FIRST_UPP_ASCII && index <= LAST_UPP_ASCII) {
             // Add uppercase count to char count
