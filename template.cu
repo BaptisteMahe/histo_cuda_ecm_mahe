@@ -24,15 +24,15 @@ void generateHisto(char* inputFileName, char* outputFileName);
 
 void writeOutputCSV(int result[NB_ASCII], char* outputFileName);
 
-void processBatchInKernel(  char* d_data,
-                            char h_data[MAX_LINE][MAX_CHAR],
+void processBatchInKernel(  char** d_data,
+                            char* h_data[MAX_LINE][MAX_CHAR],
                             int nbLine,
                             size_t pitch,
                             int lineSize,
-                            int* d_result,
-                            int h_result[NB_ASCII],
+                            int** d_result,
+                            int* h_result[NB_ASCII],
                             int resultSize,
-                            int totalResult[NB_ASCII],
+                            int* totalResult[NB_ASCII],
                             int threadsPerBlock);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -137,7 +137,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
             printf("Loaded %i lines \n", nbLine);
 
-	    	processBatchInKernel(d_data, h_data, nbLine, pitch, lineSize, d_result, h_result, resultSize, totalResult, threadsPerBlock);
+	    	processBatchInKernel(&d_data, &h_data, nbLine, pitch, lineSize, &d_result, &h_result, resultSize, &totalResult, threadsPerBlock);
             
             nbLine = 0;
 		}
@@ -148,7 +148,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     printf("Loaded %i lines \n", nbLine);
 
-    processBatchInKernel(d_data, h_data, nbLine, pitch, lineSize, d_result, h_result, resultSize, totalResult, threadsPerBlock); 
+    processBatchInKernel(&d_data, &h_data, nbLine, pitch, lineSize, &d_result, &h_result, resultSize, &totalResult, threadsPerBlock);
     
     fclose(inputFile);
     
@@ -168,15 +168,15 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 //! Send batch data to kernel and store the output in totalResult
 ////////////////////////////////////////////////////////////////////////////////
 
-void processBatchInKernel(  char* d_data,
-                            char h_data[MAX_LINE][MAX_CHAR],
+void processBatchInKernel(  char** d_data,
+                            char* h_data[MAX_LINE][MAX_CHAR],
                             int nbLine,
                             size_t pitch,
                             int lineSize,
-                            int* d_result,
-                            int h_result[NB_ASCII],
+                            int** d_result,
+                            int* h_result[NB_ASCII],
                             int resultSize,
-                            int totalResult[NB_ASCII],
+                            int* totalResult[NB_ASCII],
                             int threadsPerBlock) {
 
     // Setup execution parameters
@@ -184,17 +184,17 @@ void processBatchInKernel(  char* d_data,
     dim3  threads(threadsPerBlock, 1, 1);
 
     // Copy data to device
-    checkCudaErrors(cudaMemcpy2D(d_data, pitch, h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy2D(*d_data, pitch, *h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
     
     // Execute the kernel
-    kernelFunction<<< grid, threads, 0 >>>(d_data, d_result, nbLine, pitch);
+    kernelFunction<<< grid, threads, 0 >>>(*d_data, *d_result, nbLine, pitch);
     getLastCudaError("Kernel execution failed");
     
     // Copy result from device to host
-    checkCudaErrors(cudaMemcpy(&h_result, d_result, resultSize, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
 
     for (int index = 0; index < NB_ASCII; index++) {
-        totalResult[index] += h_result[index];
+        *totalResult[index] += h_result[index];
     }
 }
 
