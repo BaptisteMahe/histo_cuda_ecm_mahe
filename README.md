@@ -6,7 +6,11 @@ This CUDA script generate a histogram of the letters in a CSV file with a given 
 
 Sujet du TP : http://info.iut-bm.univ-fcomte.fr/staff/perrot/ECM-GPU/sujets/histoText/histoText.html
 
-* Avez-vous eu des difficultés à réaliser correctement l’optimisation ?
+* Avez-vous eu des difficultés à réaliser correctement l’optimisation ?\
+Les différentes diffiultés furent :
+1. Charger le fichier en entier peu importe sa taille.
+2. Passer les appels de la fonction kernel dans une fonction séparée du programme pour une lecture plus simple du code.
+
 * Quelles sont les optimisations les plus bénéfiques ?
 * Combien de lectures de la mémoire globale sont-elles effectuées par votre kernel calculant l’histogramme ? expliquez.
 * Combien d’opérations atomiques sont effectuées par votre kernel calculant l’histogramme ? expliquez.
