@@ -85,13 +85,15 @@ int main(int argc, char **argv) {
 				outputFileName = optarg;
 				break;
             case 'h':
+                printf("\n");
                 printf("Usage :\n");
-                printf("\t-i <inputFileName>\n");
-                printf("\t-o <outputFileName>\n");
+                printf("\t- -i <inputFileName>\n");
+                printf("\t- -o <outputFileName>\n");
                 printf("Info :\n");
                 printf("\t- The input file should be a text file with a maximum of %i characters per line.\n", MAX_CHAR);
                 printf("\t- The input file will be processed by batches of %i lines.\n", MAX_LINE);
                 printf("\t- There is no limit regarding the number of lines of the input file.\n");
+                printf("\n");
                 exit(EXIT_SUCCESS);
 			default:
 				break;
