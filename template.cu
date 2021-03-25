@@ -193,7 +193,7 @@ void processBatchInKernel(  char** d_data,
     checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
 
     for (int index = 0; index < NB_ASCII; index++) {
-        totalResult[index] += h_result[index];
+        totalResult[index] = h_result[index];
     }
 }
 
