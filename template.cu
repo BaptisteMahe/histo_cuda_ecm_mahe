@@ -17,6 +17,10 @@
 #define MAX_LINE 200000
 #define MAX_CHAR 40
 #define NB_ASCII 128
+#define FIST_RELEVANT_ASCII 32
+#define LAST_RELEVANT_ASCII 126
+#define FIRST_UPP_ASCII 65
+#define LAST_UPP_ASCII 90
 
 ////////////////////////////////////////////////////////////////////////////////
 // declaration, forward
@@ -86,7 +90,15 @@ int main(int argc, char **argv) {
 
 	printf("%s Starting...\n\n", argv[0]);
 
+    StopWatchInterface *timer = 0;
+    sdkCreateTimer(&timer);
+    sdkStartTimer(&timer);
+
 	generateHisto(inputFileName, outputFileName);
+
+    sdkStopTimer(&timer);
+    printf("Processing time: %f (ms)\n", sdkGetTimerValue(&timer));
+    sdkDeleteTimer(&timer);
 
 	exit(EXIT_SUCCESS);
 }
@@ -95,10 +107,6 @@ int main(int argc, char **argv) {
 //! Generate the Histogram
 ////////////////////////////////////////////////////////////////////////////////
 void generateHisto(char* inputFileName, char* outputFileName) {
-
-    StopWatchInterface *timer = 0;
-    sdkCreateTimer(&timer);
-    sdkStartTimer(&timer);
 
     // Print MemInfo
     size_t memfree, memtotal;
@@ -156,10 +164,6 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     // cleanup memory
     checkCudaErrors(cudaFree(d_data));
     checkCudaErrors(cudaFree(d_result));
-
-    sdkStopTimer(&timer);
-    printf("Processing time: %f (ms)\n", sdkGetTimerValue(&timer));
-    sdkDeleteTimer(&timer);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -207,9 +211,17 @@ void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
 
 	outputFile = fopen(outputFileName, "w+");
 	
-	for (int index = 32; index < 127; index++) {
-		asciiChar = index;
-		fprintf(outputFile, "%c: %i\n", asciiChar, result[index]);
+	for (int index = FIST_RELEVANT_ASCII; index =< LAST_RELEVANT_ASCII; index++) {
+
+        if (index >= FIRST_UPP_ASCII && index <= LAST_UPP_ASCII) {
+            // Add uppercase count to char count
+            result[index + 32] += result[index]
+        } else {
+            // Print count in file
+            asciiChar = index;
+		    fprintf(outputFile, "%c: %i\n", asciiChar, result[index]);
+        }
+
 	}
 
 	fclose(outputFile);
