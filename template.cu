@@ -32,7 +32,7 @@ void processBatchInKernel(  char* d_data,
                             int* d_result,
                             int h_result[NB_ASCII],
                             int resultSize,
-                            int totalResult[NB_ASCII]
+                            int totalResult[NB_ASCII],
                             dim3 grid,
                             dim3 threads);
 
@@ -182,7 +182,7 @@ void processBatchInKernel(  char* d_data,
                             int* d_result,
                             int h_result[NB_ASCII],
                             int resultSize,
-                            int totalResult[NB_ASCII]
+                            int totalResult[NB_ASCII],
                             dim3 grid,
                             dim3 threads) {
 
