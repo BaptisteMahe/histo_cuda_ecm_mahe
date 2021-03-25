@@ -102,8 +102,11 @@ int main(int argc, char **argv) {
 	generateHisto(inputFileName, outputFileName);
 
     sdkStopTimer(&timer);
-    printf("Processing time: %f (ms)\n", sdkGetTimerValue(&timer));
+    printf("Processing time: %f (ms)\n\n", sdkGetTimerValue(&timer));
     sdkDeleteTimer(&timer);
+
+    printf("Input file processed successfully.");
+    printf("Check results in %s.", outputFileName);
 
 	exit(EXIT_SUCCESS);
 }
@@ -133,6 +136,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     inputFile = fopen(inputFileName, "r");
     if (!inputFile) {
         printf("Wrong input file\n");
+        printHelper();
 		exit(EXIT_FAILURE);
     }
 
