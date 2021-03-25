@@ -175,11 +175,11 @@ void processBatchInKernel(  char** d_data,
                             int resultSize,
                             int totalResult[NB_ASCII],
                             int threadsPerBlock) {
-
+    // Allocate memory for result in host
     int h_result[NB_ASCII];
 
     // Setup execution parameters
-    dim3  grid((MAX_LINE + threadsPerBlock - 1) / threadsPerBlock, 1, 1);
+    dim3  grid((nbLine + threadsPerBlock - 1) / threadsPerBlock, 1, 1);
     dim3  threads(threadsPerBlock, 1, 1);
 
     // Copy data to device
