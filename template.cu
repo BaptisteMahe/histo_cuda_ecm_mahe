@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 				break;
 		}
 
-	printf("%s Starting...\n\n", argv[0]);
+	printf("\n%s Starting...\n\n", argv[0]);
 
     StopWatchInterface *timer = 0;
     sdkCreateTimer(&timer);
@@ -105,8 +105,8 @@ int main(int argc, char **argv) {
     printf("Processing time: %f (ms)\n\n", sdkGetTimerValue(&timer));
     sdkDeleteTimer(&timer);
 
-    printf("Input file processed successfully.");
-    printf("Check results in %s.", outputFileName);
+    printf("Input file processed successfully.\n");
+    printf("Check results in %s.\n\n", outputFileName);
 
 	exit(EXIT_SUCCESS);
 }
