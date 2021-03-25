@@ -1,15 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//
-// Copyright 1993-2015 NVIDIA Corporation.  All rights reserved.
-//
-// Please refer to the NVIDIA end user license agreement (EULA) associated
-// with this source code for terms and conditions that govern your use of
-// this software. Any use, reproduction, disclosure, or distribution of
-// this software and related documentation outside the terms of the EULA
-// is strictly prohibited.
-//
-////////////////////////////////////////////////////////////////////////////
-
 // includes, system
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,9 +24,17 @@ void generateHisto(char* inputFileName, char* outputFileName);
 
 void writeOutputCSV(int result[NB_ASCII], char* outputFileName);
 
-void startTimer(StopWatchInterface* timer);
-
-void stopTimer(StopWatchInterface* timer);
+void processBatchInKernel(  char* d_data,
+                            char h_data[MAX_LINE][MAX_CHAR],
+                            int nbLine,
+                            size_t pitch,
+                            int lineSize,
+                            int* d_result,
+                            int h_result[NB_ASCII],
+                            int resultSize,
+                            int totalResult[NB_ASCII]
+                            dim3 grid,
+                            dim3 threads);
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Kernel function to execute the computation in threads
@@ -103,7 +99,8 @@ int main(int argc, char **argv) {
 void generateHisto(char* inputFileName, char* outputFileName) {
 
     StopWatchInterface *timer = 0;
-    startTimer(timer);
+    sdkCreateTimer(&timer);
+    sdkStartTimer(&timer);
 
     // Print MemInfo
     size_t memfree, memtotal;
@@ -146,17 +143,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
             printf("Loaded %i lines \n", nbLine);
 
-	    	// Copy data to device
-            checkCudaErrors(cudaMemcpy2D(d_data, pitch, h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
-            // Execute the kernel
-            kernelFunction<<< grid, threads, 0 >>>(d_data, d_result, nbLine, pitch);
-            getLastCudaError("Kernel execution failed");
-            // Copy result from device to host
-            checkCudaErrors(cudaMemcpy(&h_result, d_result, resultSize, cudaMemcpyDeviceToHost));
-
-            for (int index = 0; index < NB_ASCII; index++) {
-                totalResult[index] += h_result[index];
-            }
+	    	processBatchInKernel(d_data, h_data, nbLine, pitch, lineSize, d_result, h_result, resultSize, totalResult, grid, threads);
             
             nbLine = 0;
 		}
@@ -166,6 +153,38 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     }
     
     printf("Loaded %i lines \n", nbLine);
+
+    processBatchInKernel(d_data, h_data, nbLine, pitch, lineSize, d_result, h_result, resultSize, totalResult, grid, threads); 
+    
+    fclose(inputFile);
+    
+    //write the output
+    writeOutputCSV(h_result, outputFileName);
+
+    // cleanup memory
+    checkCudaErrors(cudaFree(d_data));
+    checkCudaErrors(cudaFree(d_result));
+
+    sdkStopTimer(&timer);
+    printf("Processing time: %f (ms)\n", sdkGetTimerValue(&timer));
+    sdkDeleteTimer(&timer);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//! Send batch data to kernel and store the output in totalResult
+////////////////////////////////////////////////////////////////////////////////
+
+void processBatchInKernel(  char* d_data,
+                            char h_data[MAX_LINE][MAX_CHAR],
+                            int nbLine,
+                            size_t pitch,
+                            int lineSize,
+                            int* d_result,
+                            int h_result[NB_ASCII],
+                            int resultSize,
+                            int totalResult[NB_ASCII]
+                            dim3 grid,
+                            dim3 threads) {
 
     // Copy data to device
     checkCudaErrors(cudaMemcpy2D(d_data, pitch, h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
@@ -177,18 +196,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
     for (int index = 0; index < NB_ASCII; index++) {
         totalResult[index] += h_result[index];
-    } 
-    
-    fclose(inputFile);
-    
-    //write the output
-    writeOutputCSV(h_result, outputFileName);
-
-    // cleanup memory
-    checkCudaErrors(cudaFree(d_data));
-    checkCudaErrors(cudaFree(d_result));
-
-    stopTimer(timer);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -207,21 +215,4 @@ void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
 	}
 
 	fclose(outputFile);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//! Start the timer
-////////////////////////////////////////////////////////////////////////////////
-void startTimer(StopWatchInterface* timer) {
-    sdkCreateTimer(&timer);
-    sdkStartTimer(&timer);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//! Stop the timer
-////////////////////////////////////////////////////////////////////////////////
-void stopTimer(StopWatchInterface* timer) {
-  sdkStopTimer(&timer);
-  printf("Processing time: %f (ms)\n", sdkGetTimerValue(&timer));
-  sdkDeleteTimer(&timer);
 }
