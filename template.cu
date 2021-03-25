@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 	
 	int c;
 	char *inputFileName = NULL;
-	char *outputFileName = NULL;
+	char *outputFileName = "out.csv";
 
 	while ((c = getopt (argc, argv, "i:o:h")) != -1)
 		switch(c) {
@@ -241,8 +241,8 @@ void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
 void printHelper() {
     printf("\n");
     printf("Usage :\n");
-    printf("\t- -i <inputFileName>\n");
-    printf("\t- -o <outputFileName>\n");
+    printf("\t- -i <inputFileName>  (required)\n");
+    printf("\t- -o <outputFileName> (default is 'out.csv')\n");
     printf("Info :\n");
     printf("\t- The input file should be a text file with a maximum of %i characters per line.\n", MAX_CHAR);
     printf("\t- The input file will be processed by batches of %i lines.\n", MAX_LINE);
