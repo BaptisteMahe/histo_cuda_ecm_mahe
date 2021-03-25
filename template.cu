@@ -17,6 +17,7 @@
 #define MAX_LINE 200000
 #define MAX_CHAR 40
 #define NB_ASCII 128
+#define THREADS_PER_BLOCK 1024
 #define FIST_RELEVANT_ASCII 32
 #define LAST_RELEVANT_ASCII 126
 #define FIRST_UPP_ASCII 65
@@ -35,8 +36,7 @@ void processBatchInKernel(  char** d_data,
                             int lineSize,
                             int** d_result,
                             int resultSize,
-                            int resultStorage[NB_ASCII],
-                            int threadsPerBlock);
+                            int resultStorage[NB_ASCII]);
 
 void printHelper();
                             
@@ -121,8 +121,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     // Print MemInfo
     size_t memfree, memtotal;
     checkCudaErrors(cudaMemGetInfo(&memfree, &memtotal));
-
-    unsigned int threadsPerBlock = 1024;
+    
     unsigned int resultSize = NB_ASCII * sizeof(int);
     unsigned int lineSize = MAX_CHAR * sizeof(char);
 
@@ -136,6 +135,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     // Load input file
     FILE *inputFile = NULL;
     inputFile = fopen(inputFileName, "r");
+
     if (!inputFile) {
         printf("Wrong input file\n");
         printHelper();
@@ -155,7 +155,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
             printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
 
-	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage, threadsPerBlock);
+	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage);
             
             nbLine = 0;
             batchNum++;
@@ -167,7 +167,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
 
-    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage, threadsPerBlock);
+    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage);
     
     fclose(inputFile);
     
@@ -189,7 +189,6 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 //! @param d_result input pointer to the allo
 //! @param resultSize input pointer to the allocated memory for the output data on the device
 //! @param resultStorage output result of the computation as an array
-//! @param threadsPerBlock input number of threads per block on the device
 ////////////////////////////////////////////////////////////////////////////////
 
 void processBatchInKernel(  char** d_data,
@@ -199,14 +198,13 @@ void processBatchInKernel(  char** d_data,
                             int lineSize,
                             int** d_result,
                             int resultSize,
-                            int resultStorage[NB_ASCII],
-                            int threadsPerBlock) {
+                            int resultStorage[NB_ASCII]) {
     // Allocate memory for result in host
     int h_result[NB_ASCII];
 
     // Setup execution parameters
-    dim3  grid((nbLine + threadsPerBlock - 1) / threadsPerBlock, 1, 1);
-    dim3  threads(threadsPerBlock, 1, 1);
+    dim3  grid((nbLine + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1, 1);
+    dim3  threads(THREADS_PER_BLOCK, 1, 1);
 
     // Copy data to device
     checkCudaErrors(cudaMemcpy2D(*d_data, pitch, h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
