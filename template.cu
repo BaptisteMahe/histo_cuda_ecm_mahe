@@ -225,6 +225,8 @@ void processBatchInKernel(  char** d_data,
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Write the given output to the CSV file
+//! @param result input the given ouput of the computations as an array of int
+//! @param outputFileName input file name to write in
 ////////////////////////////////////////////////////////////////////////////////
 
 void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
