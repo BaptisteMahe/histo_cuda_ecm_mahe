@@ -33,8 +33,7 @@ void processBatchInKernel(  char* d_data,
                             int h_result[NB_ASCII],
                             int resultSize,
                             int totalResult[NB_ASCII],
-                            dim3 grid,
-                            dim3 threads);
+                            int threadsPerBlock);
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Kernel function to execute the computation in threads
@@ -110,7 +109,6 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     unsigned int resultSize = NB_ASCII * sizeof(int);
     unsigned int lineSize = MAX_CHAR * sizeof(char);
 
-
     // Allocate device memory
     int* d_result;
     char* d_data;
@@ -118,11 +116,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     checkCudaErrors(cudaMallocPitch((void **) &d_data, &pitch, lineSize, MAX_LINE));
     checkCudaErrors(cudaMalloc((void **) &d_result, resultSize));
 
-    // Setup execution parameters
-    dim3  grid((MAX_LINE + threadsPerBlock - 1) / threadsPerBlock, 1, 1);
-    dim3  threads(threadsPerBlock, 1, 1);
-
-    // Load input file data
+    // Load input file
     FILE *inputFile = NULL;
     inputFile = fopen(inputFileName, "r");
     if (!inputFile) {
@@ -143,7 +137,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
             printf("Loaded %i lines \n", nbLine);
 
-	    	processBatchInKernel(d_data, h_data, nbLine, pitch, lineSize, d_result, h_result, resultSize, totalResult, grid, threads);
+	    	processBatchInKernel(d_data, h_data, nbLine, pitch, lineSize, d_result, h_result, resultSize, totalResult, threadsPerBlock);
             
             nbLine = 0;
 		}
@@ -154,7 +148,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     printf("Loaded %i lines \n", nbLine);
 
-    processBatchInKernel(d_data, h_data, nbLine, pitch, lineSize, d_result, h_result, resultSize, totalResult, grid, threads); 
+    processBatchInKernel(d_data, h_data, nbLine, pitch, lineSize, d_result, h_result, resultSize, totalResult, threadsPerBlock); 
     
     fclose(inputFile);
     
@@ -183,14 +177,19 @@ void processBatchInKernel(  char* d_data,
                             int h_result[NB_ASCII],
                             int resultSize,
                             int totalResult[NB_ASCII],
-                            dim3 grid,
-                            dim3 threads) {
+                            int threadsPerBlock) {
+
+    // Setup execution parameters
+    dim3  grid((MAX_LINE + threadsPerBlock - 1) / threadsPerBlock, 1, 1);
+    dim3  threads(threadsPerBlock, 1, 1);
 
     // Copy data to device
     checkCudaErrors(cudaMemcpy2D(d_data, pitch, h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
+    
     // Execute the kernel
     kernelFunction<<< grid, threads, 0 >>>(d_data, d_result, nbLine, pitch);
     getLastCudaError("Kernel execution failed");
+    
     // Copy result from device to host
     checkCudaErrors(cudaMemcpy(&h_result, d_result, resultSize, cudaMemcpyDeviceToHost));
 
