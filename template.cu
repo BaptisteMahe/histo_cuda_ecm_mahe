@@ -215,7 +215,7 @@ void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
 
         if (index >= FIRST_UPP_ASCII && index <= LAST_UPP_ASCII) {
             // Add uppercase count to char count
-            result[index + 32] += result[index]
+            result[index + 32] += result[index];
         } else {
             // Print count in file
             asciiChar = index;
