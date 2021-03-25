@@ -1,19 +1,19 @@
-// includes, system
+// Includes, system
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <unistd.h>
 
-// includes CUDA
+// Includes, CUDA
 #include <cuda_runtime.h>
 
-// includes, project
+// Includes, project
 #include <helper_cuda.h>
 #include <helper_functions.h> // helper functions for SDK examples
 #include "common.h"
 
-// define constants
+// Define constants
 #define MAX_LINE 200000
 #define MAX_CHAR 40
 #define NB_ASCII 128
@@ -23,7 +23,7 @@
 #define LAST_UPP_ASCII 90
 
 ////////////////////////////////////////////////////////////////////////////////
-// declaration, forward
+// Declarations
 void generateHisto(char* inputFileName, char* outputFileName);
 
 void writeOutputCSV(int result[NB_ASCII], char* outputFileName);
@@ -37,6 +37,8 @@ void processBatchInKernel(  char** d_data,
                             int resultSize,
                             int totalResult[NB_ASCII],
                             int threadsPerBlock);
+
+void printHelper();
                             
 ////////////////////////////////////////////////////////////////////////////////
 //! Kernel function to execute the computation in threads
@@ -85,15 +87,7 @@ int main(int argc, char **argv) {
 				outputFileName = optarg;
 				break;
             case 'h':
-                printf("\n");
-                printf("Usage :\n");
-                printf("\t- -i <inputFileName>\n");
-                printf("\t- -o <outputFileName>\n");
-                printf("Info :\n");
-                printf("\t- The input file should be a text file with a maximum of %i characters per line.\n", MAX_CHAR);
-                printf("\t- The input file will be processed by batches of %i lines.\n", MAX_LINE);
-                printf("\t- There is no limit regarding the number of lines of the input file.\n");
-                printf("\n");
+                printHelper();
                 exit(EXIT_SUCCESS);
 			default:
 				break;
@@ -147,23 +141,25 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     char h_data[MAX_LINE][MAX_CHAR];
     int totalResult[NB_ASCII];
     int nbLine = 0;
+    int batchNum = 1;
     
     while (fgets(str, MAX_CHAR, inputFile)) {
 	
 		if (nbLine == MAX_LINE) {
 
-            printf("Loaded %i lines \n", nbLine);
+            printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
 
 	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, totalResult, threadsPerBlock);
             
             nbLine = 0;
+            batchNum++;
 		}
 
         strcpy(h_data[nbLine], str);
         nbLine++;
     }
     
-    printf("Loaded %i lines \n", nbLine);
+    printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
 
     processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, totalResult, threadsPerBlock);
     
@@ -236,4 +232,20 @@ void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
 	}
 
 	fclose(outputFile);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//! Print information for user
+////////////////////////////////////////////////////////////////////////////////
+
+void printHelper() {
+    printf("\n");
+    printf("Usage :\n");
+    printf("\t- -i <inputFileName>\n");
+    printf("\t- -o <outputFileName>\n");
+    printf("Info :\n");
+    printf("\t- The input file should be a text file with a maximum of %i characters per line.\n", MAX_CHAR);
+    printf("\t- The input file will be processed by batches of %i lines.\n", MAX_LINE);
+    printf("\t- There is no limit regarding the number of lines of the input file.\n");
+    printf("\n");
 }
