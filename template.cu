@@ -35,7 +35,7 @@ void processBatchInKernel(  char** d_data,
                             int lineSize,
                             int** d_result,
                             int resultSize,
-                            int totalResult[NB_ASCII],
+                            int resultStorage[NB_ASCII],
                             int threadsPerBlock);
 
 void printHelper();
@@ -113,6 +113,8 @@ int main(int argc, char **argv) {
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Generate the Histogram
+//! @param inputFileName input name of the file to process
+//! @param outputFileName input name of the file to output the histogram in
 ////////////////////////////////////////////////////////////////////////////////
 void generateHisto(char* inputFileName, char* outputFileName) {
 
@@ -143,7 +145,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     // Allocate host memory
     char str[MAX_CHAR];
     char h_data[MAX_LINE][MAX_CHAR];
-    int totalResult[NB_ASCII];
+    int resultStorage[NB_ASCII];
     int nbLine = 0;
     int batchNum = 1;
     
@@ -153,7 +155,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
             printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
 
-	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, totalResult, threadsPerBlock);
+	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage, threadsPerBlock);
             
             nbLine = 0;
             batchNum++;
@@ -165,12 +167,12 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
 
-    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, totalResult, threadsPerBlock);
+    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage, threadsPerBlock);
     
     fclose(inputFile);
     
     //write the output
-    writeOutputCSV(totalResult, outputFileName);
+    writeOutputCSV(resultStorage, outputFileName);
 
     // cleanup memory
     checkCudaErrors(cudaFree(d_data));
@@ -178,7 +180,16 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//! Send batch data to kernel and store the output in totalResult
+//! Send batch data to kernel and store the output in resultStorage
+//! @param d_data input pointer to the allocated memory for the input data on the device
+//! @param h_data input the list of strings to process
+//! @param nbLine input number of lines to process for the current batch
+//! @param pitch input pitch size of the array in the device 
+//! @param lineSize input size of a single line
+//! @param d_result input pointer to the allo
+//! @param resultSize input pointer to the allocated memory for the output data on the device
+//! @param resultStorage output result of the computation as an array
+//! @param threadsPerBlock input number of threads per block on the device
 ////////////////////////////////////////////////////////////////////////////////
 
 void processBatchInKernel(  char** d_data,
@@ -188,7 +199,7 @@ void processBatchInKernel(  char** d_data,
                             int lineSize,
                             int** d_result,
                             int resultSize,
-                            int totalResult[NB_ASCII],
+                            int resultStorage[NB_ASCII],
                             int threadsPerBlock) {
     // Allocate memory for result in host
     int h_result[NB_ASCII];
@@ -208,7 +219,7 @@ void processBatchInKernel(  char** d_data,
     checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
 
     for (int index = 0; index < NB_ASCII; index++) {
-        totalResult[index] = h_result[index];
+        resultStorage[index] = h_result[index];
     }
 }
 
