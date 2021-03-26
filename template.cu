@@ -212,7 +212,7 @@ void processBatchInKernel(  char h_data[MAX_LINE][MAX_CHAR],
     checkCudaErrors(cudaMemcpy2D(d_data, pitch, h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
     
     // Execute the kernel
-    kernelFunction<<< grid, threads, 0 >>>(d_data, d_result, nbLine, pitch);
+    kernelFunction<<< 1, nbLine, 0 >>>(d_data, d_result, nbLine, pitch);
     getLastCudaError("Kernel execution failed");
     
     // Copy result from device to host
