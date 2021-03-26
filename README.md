@@ -12,6 +12,12 @@ Les différentes diffiultés furent :
 2. Passer les appels de la fonction kernel dans une fonction séparée du programme pour une lecture plus simple du code.
 
 ### Quelles sont les optimisations les plus bénéfiques ?
+550 ms avec mémoire globale.
+
 ### Combien de lectures de la mémoire globale sont-elles effectuées par votre kernel calculant l’histogramme ? expliquez.
+Par ligne le programe va lire toute les lettres une par une dans la mémoire globale.
+Pour chaque lettre, le pro
+
+
 ### Combien d’opérations atomiques sont effectuées par votre kernel calculant l’histogramme ? expliquez.
 ### La plupart des fichiers texte se composent uniquement de lettres, de chiffres et de caractères d’espacement. Que pouvons-nous dire sur les conflits d’accès concernant le nombre de threads qui essaient simultanément d’incrémenter atomiquement un histogramme privé ?
