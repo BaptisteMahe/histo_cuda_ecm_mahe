@@ -71,11 +71,13 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
 
         if (tidb == 0) {
             for (int index = 0; index < NB_ASCII; index++) {
-                printf("%i", s_result[index]);
+                //printf("%i", s_result[index]);
                 atomicAdd(&d_result[index], s_result[index]);
             }
         }
-    } 
+    } else {
+        printf("%i\n", ti);
+    }
 }
 
 
