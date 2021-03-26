@@ -51,7 +51,7 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
 
-    __shared__ int s_result[NB_ASCII];
+    // __shared__ int s_result[NB_ASCII];
     
     if (ti < nbLine) {
 		char* line = (char *)((char*)d_data + ti * pitch);
@@ -59,18 +59,18 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
 		int currentLetter = line[index];
 
 		while (currentLetter > 0) {
-	    	atomicAdd(&s_result[currentLetter], 1);
+	    	atomicAdd(&d_result[currentLetter], 1);
 	    	index++;
 	    	currentLetter = line[index];
 		}
 
-        __syncthreads();
+        // __syncthreads();
 
-        if (tidb == 0) {
-            for (int i = 0; i < NB_ASCII; i++) {
-                atomicAdd(&d_result[i],  s_result[i]);
-            }
-        }
+        // if (tidb == 0) {
+        //     for (int i = 0; i < NB_ASCII; i++) {
+        //         atomicAdd(&d_result[i],  s_result[i]);
+        //     }
+        // }
     }
 }
 
