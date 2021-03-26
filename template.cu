@@ -66,7 +66,7 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
 
         __syncthreads();
 
-        if (ti == 0) {
+        if (0 == threadIdx.x) {
             for (int i = 0; i < NB_ASCII; i++) {
                 atomicAdd(&d_result[i], s_result[i]);
             }
