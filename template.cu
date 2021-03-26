@@ -51,7 +51,7 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
 
-    extern __shared__ int s_result[NB_ASCII];
+    __shared__ int s_result[NB_ASCII];
     
     if (ti < nbLine) {
 		char* line = (char *)((char*)d_data + ti * pitch);
@@ -212,7 +212,7 @@ void processBatchInKernel(  char h_data[MAX_LINE][MAX_CHAR],
     checkCudaErrors(cudaMemcpy2D(d_data, pitch, h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
     
     // Execute the kernel
-    kernelFunction<<< grid, threads, 0 >>>(d_data, d_result, nbLine, pitch);
+    kernelFunction<<< nbLine/THREADS_PER_BLOCK, THREADS_PER_BLOCK, resultSize >>>(d_data, d_result, nbLine, pitch);
     getLastCudaError("Kernel execution failed");
     
     // Copy result from device to host
