@@ -51,7 +51,7 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
 
-    __global__ int s_result[NB_ASCII];
+    __constant__ int s_result[NB_ASCII];
     
     if (ti < nbLine) {
 		char* line = (char *)((char*)d_data + ti * pitch);
