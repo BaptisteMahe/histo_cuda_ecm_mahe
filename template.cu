@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 	
 	int c;
 	char *inputFileName = NULL;
-	char *outputFileName = "out.csv";
+	char *outputFileName = NULL;
 
 	while ((c = getopt (argc, argv, "i:o:h")) != -1)
 		switch(c) {
@@ -92,6 +92,10 @@ int main(int argc, char **argv) {
 			default:
 				break;
 		}
+    
+    if (!outputFileName) {
+        outputFileName = "out.csv";
+    }
 
 	printf("\n%s Starting...\n\n", argv[0]);
 
@@ -117,11 +121,8 @@ int main(int argc, char **argv) {
 //! @param outputFileName input name of the file to output the histogram in
 ////////////////////////////////////////////////////////////////////////////////
 void generateHisto(char* inputFileName, char* outputFileName) {
-
-    // Print MemInfo
-    size_t memfree, memtotal;
-    checkCudaErrors(cudaMemGetInfo(&memfree, &memtotal));
     
+    // Compute result and data sizes
     unsigned int resultSize = NB_ASCII * sizeof(int);
     unsigned int lineSize = MAX_CHAR * sizeof(char);
 
