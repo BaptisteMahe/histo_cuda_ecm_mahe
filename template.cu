@@ -66,7 +66,7 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
 
         __syncthreads();
 
-        if (tidb == 0) {
+        if (ti == 0) {
             for (int i = 0; i < NB_ASCII; i++) {
                 atomicAdd(&d_result[i], s_result[i]);
             }
@@ -168,7 +168,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
 
-    // processBatchInKernel(h_data, nbLine, lineSize, resultSize, resultStorage);
+    processBatchInKernel(h_data, nbLine, lineSize, resultSize, resultStorage);
     
     fclose(inputFile);
     
