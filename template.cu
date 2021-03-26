@@ -113,7 +113,11 @@ int main(int argc, char **argv) {
     sdkDeleteTimer(&timer);
 
     printf("Input file processed successfully.\n");
-    printf("Check results in %s.\n\n", outputFileName);
+    if (outputFileName) {
+        printf("Check results in %s.\n\n", outputFileName);
+    } else {
+        printf("Check results in out.csv.\n\n");
+    }
 
 	exit(EXIT_SUCCESS);
 }
