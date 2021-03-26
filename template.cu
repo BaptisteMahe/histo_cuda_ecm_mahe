@@ -29,12 +29,9 @@ void generateHisto(char* inputFileName, char* outputFileName);
 
 void writeOutputCSV(int result[NB_ASCII], char* outputFileName);
 
-void processBatchInKernel(  char** d_data,
-                            char h_data[MAX_LINE][MAX_CHAR],
+void processBatchInKernel(  char h_data[MAX_LINE][MAX_CHAR],
                             int nbLine,
-                            size_t pitch,
                             int lineSize,
-                            int** d_result,
                             int resultSize,
                             int resultStorage[NB_ASCII]);
 
@@ -70,8 +67,8 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
         __syncthreads();
 
         if (tidb == 0) {
-            for (int index = 0; index < NB_ASCII; index++) {
-                d_result[index] = s_result[index];
+            for (int i = 0; i < NB_ASCII; i++) {
+                atomicAdd(&d_result[i],  s_result[i]);
             }
         }
     }
@@ -132,13 +129,6 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     unsigned int resultSize = NB_ASCII * sizeof(int);
     unsigned int lineSize = MAX_CHAR * sizeof(char);
 
-    // Allocate device memory
-    int* d_result;
-    char* d_data;
-    size_t pitch;
-    checkCudaErrors(cudaMallocPitch((void **) &d_data, &pitch, lineSize, MAX_LINE));
-    checkCudaErrors(cudaMalloc((void **) &d_result, resultSize));
-
     // Load input file
     FILE *inputFile = NULL;
     inputFile = fopen(inputFileName, "r");
@@ -162,7 +152,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
             printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
 
-	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage);
+	    	processBatchInKernel(h_data, nbLine, lineSize, resultSize, resultStorage);
             
             nbLine = 0;
             batchNum++;
@@ -174,16 +164,12 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
 
-    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage);
+    processBatchInKernel(h_data, nbLine, lineSize, resultSize, resultStorage);
     
     fclose(inputFile);
     
     //write the output
     writeOutputCSV(resultStorage, outputFileName);
-
-    // cleanup memory
-    checkCudaErrors(cudaFree(d_data));
-    checkCudaErrors(cudaFree(d_result));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,14 +184,19 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 //! @param resultStorage output result of the computation as an array
 ////////////////////////////////////////////////////////////////////////////////
 
-void processBatchInKernel(  char** d_data,
-                            char h_data[MAX_LINE][MAX_CHAR],
+void processBatchInKernel(  char h_data[MAX_LINE][MAX_CHAR],
                             int nbLine,
-                            size_t pitch,
                             int lineSize,
-                            int** d_result,
                             int resultSize,
                             int resultStorage[NB_ASCII]) {
+
+    // Allocate device memory
+    int* d_result;
+    char* d_data;
+    size_t pitch;
+    checkCudaErrors(cudaMallocPitch((void **) &d_data, &pitch, lineSize, MAX_LINE));
+    checkCudaErrors(cudaMalloc((void **) &d_result, resultSize));
+
     // Allocate memory for result in host
     int h_result[NB_ASCII];
 
@@ -214,18 +205,22 @@ void processBatchInKernel(  char** d_data,
     dim3  threads(THREADS_PER_BLOCK, 1, 1);
 
     // Copy data to device
-    checkCudaErrors(cudaMemcpy2D(*d_data, pitch, h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy2D(d_data, pitch, h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
     
     // Execute the kernel
-    kernelFunction<<< grid, threads, 0 >>>(*d_data, *d_result, nbLine, pitch);
+    kernelFunction<<< grid, threads, 0 >>>(d_data, d_result, nbLine, pitch);
     getLastCudaError("Kernel execution failed");
     
     // Copy result from device to host
-    checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&h_result, d_result, resultSize, cudaMemcpyDeviceToHost));
 
     for (int index = 0; index < NB_ASCII; index++) {
         resultStorage[index] = h_result[index];
     }
+
+    // Cleanup memory
+    checkCudaErrors(cudaFree(d_data));
+    checkCudaErrors(cudaFree(d_result));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
