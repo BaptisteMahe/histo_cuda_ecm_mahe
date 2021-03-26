@@ -71,12 +71,9 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
 
         if (tidb == 0) {
             for (int index = 0; index < NB_ASCII; index++) {
-                //printf("%i", s_result[index]);
-                atomicAdd(&d_result[index], s_result[index]);
+                d_result[index] = s_result[index];
             }
         }
-    } else {
-        printf("%i\n", ti);
     }
 }
 
@@ -105,10 +102,6 @@ int main(int argc, char **argv) {
 			default:
 				break;
 		}
-    
-    if (!outputFileName) {
-        outputFileName = "out.csv";
-    }
 
 	printf("\n%s Starting...\n\n", argv[0]);
 
@@ -245,7 +238,11 @@ void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
 	FILE *outputFile;
 	char asciiChar;
 
-	outputFile = fopen(outputFileName, "w+");
+    if (outputFileName) {
+        outputFile = fopen(outputFileName, "w+");
+    } else {
+        outputFile = fopen("out.csv", "w+");
+    }
 	
 	for (int index = FIST_RELEVANT_ASCII; index <= LAST_RELEVANT_ASCII; index++) {
 
