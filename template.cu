@@ -219,7 +219,7 @@ void processBatchInKernel(  char h_data[MAX_LINE][MAX_CHAR],
     checkCudaErrors(cudaMemcpy(&h_result, d_result, resultSize, cudaMemcpyDeviceToHost));
 
     for (int index = 0; index < NB_ASCII; index++) {
-        resultStorage[index] = h_result[index];
+        resultStorage[index] += h_result[index];
     }
 
     // Cleanup memory
