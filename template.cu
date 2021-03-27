@@ -29,9 +29,12 @@ void generateHisto(char* inputFileName, char* outputFileName);
 
 void writeOutputCSV(int result[NB_ASCII], char* outputFileName);
 
-void processBatchInKernel(  char h_data[MAX_LINE][MAX_CHAR],
+void processBatchInKernel(  char** d_data,
+                            char h_data[MAX_LINE][MAX_CHAR],
                             int nbLine,
+                            size_t pitch,
                             int lineSize,
+                            int** d_result,
                             int resultSize,
                             int resultStorage[NB_ASCII]);
 
