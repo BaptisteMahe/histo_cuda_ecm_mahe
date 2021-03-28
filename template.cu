@@ -236,7 +236,7 @@ void processBatchInKernel(  char** d_data,
     getLastCudaError("Kernel execution failed");
     
     // Copy result from device to host
-    // checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
