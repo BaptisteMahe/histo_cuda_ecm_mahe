@@ -309,7 +309,7 @@ void writeOutputCSV(unsigned long long result[NB_ASCII], char* outputFileName) {
         } else {
             // Write count in file
             asciiChar = index;
-		    fprintf(outputFile, "%c: %i\n", asciiChar, result[index]);
+		    fprintf(outputFile, "%c: %llu\n", asciiChar, result[index]);
         }
 
 	}
