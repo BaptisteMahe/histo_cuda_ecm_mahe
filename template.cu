@@ -28,16 +28,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 void generateHisto(char* inputFileName, char* outputFileName);
 
-void writeOutputCSV(unsigned long int result[NB_ASCII], char* outputFileName);
+void writeOutputCSV(unsigned long long result[NB_ASCII], char* outputFileName);
 
 void processBatchInKernel(  char** d_data,
                             char h_data[MAX_LINE][MAX_CHAR],
                             int nbLine,
                             size_t pitch,
                             int lineSize,
-                            unsigned long int** d_result,
+                            unsigned long long** d_result,
                             int resultSize,
-                            unsigned long int resultStorage[NB_ASCII]);
+                            unsigned long long resultStorage[NB_ASCII]);
 
 void printHelper();
 
@@ -50,11 +50,11 @@ void printHelper();
 ////////////////////////////////////////////////////////////////////////////////
 
 __global__ 
-void kernelGlobalMem(char* d_data, unsigned long int* d_result, int nbLine, size_t pitch) {
+void kernelGlobalMem(char* d_data, unsigned long long* d_result, int nbLine, size_t pitch) {
     
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
-    unsigned long int unit = 1;
+    unsigned long long unit = 1;
     
     // Each thread compute a single line of the data
     if (ti < nbLine) {
@@ -80,15 +80,15 @@ void kernelGlobalMem(char* d_data, unsigned long int* d_result, int nbLine, size
 ////////////////////////////////////////////////////////////////////////////////
 
 __global__ 
-void kernelSharedMem(char* d_data, unsigned long int* d_result, int nbLine, size_t pitch) {
+void kernelSharedMem(char* d_data, unsigned long long* d_result, int nbLine, size_t pitch) {
     
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
-    unsigned long int zero = 0; 
-    unsigned long int unit = 1;
+    unsigned long long zero = 0; 
+    unsigned long long unit = 1;
 
     // Declare shared memory for result computation
-    __shared__ unsigned long int s_result[NB_ASCII];
+    __shared__ unsigned long long s_result[NB_ASCII];
     // Reset shared memory values
     if (tidb == 0) {
         for (int i = 0; i < NB_ASCII; i++) {
@@ -179,7 +179,7 @@ int main(int argc, char **argv) {
 void generateHisto(char* inputFileName, char* outputFileName) {
     
     // Compute result and data sizes
-    unsigned int resultSize = NB_ASCII * sizeof(unsigned long int);
+    unsigned int resultSize = NB_ASCII * sizeof(unsigned long long);
     unsigned int lineSize = MAX_CHAR * sizeof(char);
 
     // Load input file
@@ -193,14 +193,14 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
     // Allocate device memory
     char* d_data;
-    unsigned long int* d_result;
+    unsigned long long* d_result;
     size_t pitch;
     checkCudaErrors(cudaMallocPitch((void **) &d_data, &pitch, lineSize, MAX_LINE));
     checkCudaErrors(cudaMalloc((void **) &d_result, resultSize));
 
     // Allocate host memory
     char h_data[MAX_LINE][MAX_CHAR];
-    unsigned long int resultStorage[NB_ASCII];
+    unsigned long long resultStorage[NB_ASCII];
     char str[MAX_CHAR];
     int nbLine = 0;
     int batchNum = 1;
@@ -254,11 +254,11 @@ void processBatchInKernel(  char** d_data,
                             int nbLine,
                             size_t pitch,
                             int lineSize,
-                            unsigned long int** d_result,
+                            unsigned long long** d_result,
                             int resultSize,
-                            unsigned long int resultStorage[NB_ASCII]) {
+                            unsigned long long resultStorage[NB_ASCII]) {
     // Allocate host memory for result
-    unsigned long int h_result[NB_ASCII];
+    unsigned long long h_result[NB_ASCII];
 
     // Setup execution parameters
     dim3  grid((nbLine + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1, 1);
@@ -289,7 +289,7 @@ void processBatchInKernel(  char** d_data,
 //! @param outputFileName input file name to write in
 ////////////////////////////////////////////////////////////////////////////////
 
-void writeOutputCSV(unsigned long int result[NB_ASCII], char* outputFileName) {
+void writeOutputCSV(unsigned long long result[NB_ASCII], char* outputFileName) {
 
     // Load output file
 	FILE *outputFile;
