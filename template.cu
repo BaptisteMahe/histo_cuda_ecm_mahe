@@ -25,6 +25,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // Declarations
+////////////////////////////////////////////////////////////////////////////////
 void generateHisto(char* inputFileName, char* outputFileName);
 
 void writeOutputCSV(int result[NB_ASCII], char* outputFileName);
@@ -54,7 +55,9 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
 
+    // Declare shared memory for result computation
     __shared__ int s_result[NB_ASCII];
+    // Reset shared memory values
     if (tidb == 0) {
         for (int i = 0; i < NB_ASCII; i++) {
             s_result[i] = 0;
@@ -63,6 +66,7 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
 
     __syncthreads();
     
+    // Each thread compute a single line of the data
     if (ti < nbLine) {
 		char* line = (char *)((char*)d_data + ti * pitch);
 		int index = 0;
@@ -76,6 +80,7 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
 
         __syncthreads();
 
+        // Each first thread of a bloc add theire results to the global memory 
         if (tidb == 0) {
             for (int i = 0; i < NB_ASCII; i++) {
                 atomicAdd(&d_result[i], s_result[i]);
@@ -91,6 +96,7 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv) {
 	
+    // Process the arguments of the call
 	int c;
 	char *inputFileName = NULL;
 	char *outputFileName = NULL;
@@ -192,7 +198,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     fclose(inputFile);
     
     //write the output
-    writeOutputCSV(resultStorage, outputFileName);
+    writeOutputCSV(h_result, outputFileName);
 
     // Cleanup memory
     checkCudaErrors(cudaFree(d_data));
@@ -200,7 +206,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//! Send batch data to kernel and store the output in resultStorage
+//! Send batch data to kernel and store the output in h_result
 //! @param d_data input pointer to the allocated memory for the input data on the device
 //! @param h_data input the list of strings to process
 //! @param nbLine input number of lines to process for the current batch
@@ -208,7 +214,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 //! @param lineSize input size of a single line
 //! @param d_result input pointer to the allo
 //! @param resultSize input pointer to the allocated memory for the output data on the device
-//! @param resultStorage output result of the computation as an array
+//! @param h_result output result of the computation as an array
 ////////////////////////////////////////////////////////////////////////////////
 
 void processBatchInKernel(  char** d_data,
