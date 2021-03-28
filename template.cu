@@ -54,7 +54,7 @@ void kernelGlobalMem(char* d_data, unsigned long int* d_result, int nbLine, size
     
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
-    const unsigned long int unit = 1;
+    unsigned long int unit = 1;
     
     // Each thread compute a single line of the data
     if (ti < nbLine) {
@@ -84,8 +84,8 @@ void kernelSharedMem(char* d_data, unsigned long int* d_result, int nbLine, size
     
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
-    const unsigned long int zero = 0; 
-    const unsigned long int unit = 1;
+    unsigned long int zero = 0; 
+    unsigned long int unit = 1;
 
     // Declare shared memory for result computation
     __shared__ unsigned long int s_result[NB_ASCII];
