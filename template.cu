@@ -36,8 +36,7 @@ void processBatchInKernel(  char** d_data,
                             size_t pitch,
                             int lineSize,
                             int** d_result,
-                            int resultSize,
-                            int h_result[NB_ASCII]);
+                            int resultSize);
 
 void printHelper();
                             
@@ -179,7 +178,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 		if (nbLine == MAX_LINE) {
 
             printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
-	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, h_result);
+	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize);
             
             nbLine = 0;
             batchNum++;
@@ -192,7 +191,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     // Process last Batch (< MAX_LINE lines)
     printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
-    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, h_result);
+    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize);
     
     fclose(inputFile);
     
@@ -222,8 +221,9 @@ void processBatchInKernel(  char** d_data,
                             size_t pitch,
                             int lineSize,
                             int** d_result,
-                            int resultSize,
-                            int h_result[NB_ASCII]) {
+                            int resultSize) {
+    int h_result[NB_ASCII];
+
     // Setup execution parameters
     dim3  grid((nbLine + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1, 1);
     dim3  threads(THREADS_PER_BLOCK, 1, 1);
@@ -237,10 +237,6 @@ void processBatchInKernel(  char** d_data,
     
     // Copy result from device to host
     checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
-
-    // for (int i = 0; i < NB_ASCII; i++) {
-    //     printf("%i\n", h_result[i]);
-    // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
