@@ -326,6 +326,7 @@ void printHelper() {
     printf("Usage :\n");
     printf("\t- -i <inputFileName>  (required)\n");
     printf("\t- -o <outputFileName> (default is 'out.csv')\n");
+    printf("\t- -h Print this helper.\n");
     printf("Info :\n");
     printf("\t- The input file should be a text file with a maximum of %i characters per line.\n", MAX_CHAR);
     printf("\t- The input file will be processed by batches of %i lines.\n", MAX_LINE);
