@@ -159,16 +159,16 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     }
 
     // Allocate device memory
-    int* d_result;
     char* d_data;
+    int* d_result;
     size_t pitch;
     checkCudaErrors(cudaMallocPitch((void **) &d_data, &pitch, lineSize, MAX_LINE));
     checkCudaErrors(cudaMalloc((void **) &d_result, resultSize));
 
     // Allocate host memory
-    char str[MAX_CHAR];
     char h_data[MAX_LINE][MAX_CHAR];
     int h_result[NB_ASCII];
+    char str[MAX_CHAR];
     int nbLine = 0;
     int batchNum = 1;
     
