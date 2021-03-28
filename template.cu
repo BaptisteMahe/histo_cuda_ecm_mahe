@@ -55,10 +55,12 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
 
     __shared__ int s_result[NB_ASCII];
-    for (int i = 0; i < NB_ASCII; i++) {
-        s_result[i] = 0;
+    if (tidb == 0) {
+        for (int i = 0; i < NB_ASCII; i++) {
+            s_result[i] = 0;
+        }
     }
-
+    
     __syncthreads();
     
     if (ti < nbLine) {
