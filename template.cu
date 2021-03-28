@@ -28,7 +28,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 void generateHisto(char* inputFileName, char* outputFileName);
 
-void writeOutputCSV(int result[NB_ASCII], char* outputFileName);
+void writeOutputCSV(unsigned long int result[NB_ASCII], char* outputFileName);
 
 void processBatchInKernel(  char** d_data,
                             char h_data[MAX_LINE][MAX_CHAR],
