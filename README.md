@@ -10,6 +10,8 @@ Sujet du TP : http://info.iut-bm.univ-fcomte.fr/staff/perrot/ECM-GPU/sujets/hist
 Les différentes difficultés furent :
 1. Charger le fichier en entier peu importe sa taille.
 2. Passer les appels de la fonction kernel dans une fonction séparée du programme pour une lecture plus simple du code.
+3. Utiliser des *unsigned long long int* au lieu de simples *int*.
+4. Utiliser la mémoire partagée. 
 
 ### Quelles sont les optimisations les plus bénéfiques ?
 550 ms avec tous les atomicAdd() réalisés sur la **mémoire globale**.\
