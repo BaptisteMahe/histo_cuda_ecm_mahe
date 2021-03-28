@@ -60,7 +60,7 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
             s_result[i] = 0;
         }
     }
-    
+
     __syncthreads();
     
     if (ti < nbLine) {
@@ -163,29 +163,31 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     // Allocate host memory
     char str[MAX_CHAR];
     char h_data[MAX_LINE][MAX_CHAR];
-    int resultStorage[NB_ASCII];
+    int h_result[NB_ASCII];
     int nbLine = 0;
     int batchNum = 1;
     
+    // Iterate over the file's lines
     while (fgets(str, MAX_CHAR, inputFile)) {
 	
+        // Batch size reached, send data to kernel for process
 		if (nbLine == MAX_LINE) {
 
             printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
-
-	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage);
+	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, h_result);
             
             nbLine = 0;
             batchNum++;
 		}
 
+        // Add current line to the Batch
         strcpy(h_data[nbLine], str);
         nbLine++;
     }
     
+    // Process last Batch (< 2000 lines)
     printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
-
-    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage);
+    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, h_result);
     
     fclose(inputFile);
     
@@ -216,11 +218,7 @@ void processBatchInKernel(  char** d_data,
                             int lineSize,
                             int** d_result,
                             int resultSize,
-                            int resultStorage[NB_ASCII]) {
-
-    // Allocate memory for result in host
-    int h_result[NB_ASCII];
-
+                            int h_result[NB_ASCII]) {
     // Setup execution parameters
     dim3  grid((nbLine + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1, 1);
     dim3  threads(THREADS_PER_BLOCK, 1, 1);
@@ -234,10 +232,6 @@ void processBatchInKernel(  char** d_data,
     
     // Copy result from device to host
     checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
-
-    for (int index = 0; index < NB_ASCII; index++) {
-        resultStorage[index] = h_result[index];
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
