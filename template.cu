@@ -54,7 +54,7 @@ void kernelGlobalMem(char* d_data, unsigned long int* d_result, int nbLine, size
     
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
-    const unsigned long int unit = 1
+    const unsigned long int unit = 1;
     
     // Each thread compute a single line of the data
     if (ti < nbLine) {
