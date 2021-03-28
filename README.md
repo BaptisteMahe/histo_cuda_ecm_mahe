@@ -19,9 +19,9 @@ Les différentes diffiultés furent :
 Par ligne le programe va lire toute les lettres une par une dans la mémoire globale plus une pour vérifier la condition d'arrêt.\
 Une fois toutes les valeurs stockées dans la mémoire partagée, le 1er thread de chaque bloc va ajouter la valeur contenu dans la mémoire partagée dans l'array de mémoire globale. Cela correspond à une lecture en mémoire globale pour chaque index du tableau.
 
-Au total, on a :
-Sans utilisation de la mémoire partagée : glbMemRead = nbLine * (2 * averageLineSize + 1)
-Avec utilisation de la mmémoire partagée: glbMemRead = nbLine * (averageLineSize + 1) + nbBloc * NB_ASCII
+Au total, on a :\
+* **Sans** utilisation de la mémoire partagée : glbMemRead = nbLine * (2 * averageLineSize + 1)\
+* **Avec** utilisation de la mmémoire partagée: glbMemRead = nbLine * (averageLineSize + 1) + nbBloc * NB_ASCII\
 
 ### Combien d’opérations atomiques sont effectuées par votre kernel calculant l’histogramme ? expliquez.
 
