@@ -238,9 +238,9 @@ void processBatchInKernel(  char** d_data,
     // Copy result from device to host
     checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
 
-    for (int i = 0; i < NB_ASCII; i++) {
-        printf("%i\n", h_result[i]);
-    }
+    // for (int i = 0; i < NB_ASCII; i++) {
+    //     printf("%i\n", h_result[i]);
+    // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
