@@ -54,6 +54,7 @@ void kernelGlobalMem(char* d_data, unsigned long int* d_result, int nbLine, size
     
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
+    const unsigned long int unit = 1
     
     // Each thread compute a single line of the data
     if (ti < nbLine) {
@@ -63,7 +64,7 @@ void kernelGlobalMem(char* d_data, unsigned long int* d_result, int nbLine, size
 
         // Each char is converted to int and adds a unit to the corresponding index in the global memory
 		while (currentLetter > 0) {
-	    	atomicAdd(&d_result[currentLetter], 1);
+	    	atomicAdd(&d_result[currentLetter], unit);
 	    	index++;
 	    	currentLetter = line[index];
 		}
@@ -83,13 +84,15 @@ void kernelSharedMem(char* d_data, unsigned long int* d_result, int nbLine, size
     
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
+    const unsigned long int zero = 0; 
+    const unsigned long int unit = 1;
 
     // Declare shared memory for result computation
     __shared__ unsigned long int s_result[NB_ASCII];
     // Reset shared memory values
     if (tidb == 0) {
         for (int i = 0; i < NB_ASCII; i++) {
-            s_result[i] = 0;
+            s_result[i] = zero;
         }
     }
 
@@ -103,7 +106,7 @@ void kernelSharedMem(char* d_data, unsigned long int* d_result, int nbLine, size
 
         // Each char is converted to int and adds a unit to the corresponding index in the shared memory
 		while (currentLetter > 0) {
-	    	atomicAdd(&s_result[currentLetter], 1);
+	    	atomicAdd(&s_result[currentLetter], unit);
 	    	index++;
 	    	currentLetter = line[index];
 		}
