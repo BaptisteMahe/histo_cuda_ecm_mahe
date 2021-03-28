@@ -50,7 +50,7 @@ void printHelper();
 ////////////////////////////////////////////////////////////////////////////////
 
 __global__ 
-void kernelGlobalMem(char* d_data, int* d_result, int nbLine, size_t pitch) {
+void kernelGlobalMem(char* d_data, unsigned long int* d_result, int nbLine, size_t pitch) {
     
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
@@ -79,13 +79,13 @@ void kernelGlobalMem(char* d_data, int* d_result, int nbLine, size_t pitch) {
 ////////////////////////////////////////////////////////////////////////////////
 
 __global__ 
-void kernelSharedMem(char* d_data, int* d_result, int nbLine, size_t pitch) {
+void kernelSharedMem(char* d_data, unsigned long int* d_result, int nbLine, size_t pitch) {
     
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
 
     // Declare shared memory for result computation
-    __shared__ int s_result[NB_ASCII];
+    __shared__ unsigned long int s_result[NB_ASCII];
     // Reset shared memory values
     if (tidb == 0) {
         for (int i = 0; i < NB_ASCII; i++) {
@@ -197,7 +197,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
     // Allocate host memory
     char h_data[MAX_LINE][MAX_CHAR];
-    int resultStorage[NB_ASCII];
+    unsigned long int resultStorage[NB_ASCII];
     char str[MAX_CHAR];
     int nbLine = 0;
     int batchNum = 1;
@@ -253,8 +253,9 @@ void processBatchInKernel(  char** d_data,
                             int lineSize,
                             int** d_result,
                             int resultSize,
-                            int resultStorage[NB_ASCII]) {
-    int h_result[NB_ASCII];
+                            unsigned long int resultStorage[NB_ASCII]) {
+    // Allocate host memory for result
+    unsigned long int h_result[NB_ASCII];
 
     // Setup execution parameters
     dim3  grid((nbLine + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1, 1);
@@ -267,7 +268,7 @@ void processBatchInKernel(  char** d_data,
     // SWITCH THE COMMENT TO USE A DIFFERENT METHOD
     kernelSharedMem<<< grid, threads, 0 >>>(*d_data, *d_result, nbLine, pitch);
     // kernelGlobalMem<<< grid, threads, 0 >>>(*d_data, *d_result, nbLine, pitch);
-    
+
     getLastCudaError("Kernel execution failed");
     
     // Copy result from device to host
@@ -285,7 +286,7 @@ void processBatchInKernel(  char** d_data,
 //! @param outputFileName input file name to write in
 ////////////////////////////////////////////////////////////////////////////////
 
-void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
+void writeOutputCSV(unsigned long int result[NB_ASCII], char* outputFileName) {
 
     // Load output file
 	FILE *outputFile;
