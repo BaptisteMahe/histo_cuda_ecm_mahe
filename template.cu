@@ -264,8 +264,10 @@ void processBatchInKernel(  char** d_data,
     checkCudaErrors(cudaMemcpy2D(*d_data, pitch, h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
     
     // Execute the kernel
+    // SWITCH THE COMMENT TO USE A DIFFERENT METHOD
     kernelSharedMem<<< grid, threads, 0 >>>(*d_data, *d_result, nbLine, pitch);
     // kernelGlobalMem<<< grid, threads, 0 >>>(*d_data, *d_result, nbLine, pitch);
+    
     getLastCudaError("Kernel execution failed");
     
     // Copy result from device to host
@@ -299,7 +301,7 @@ void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
 
         if (index >= FIRST_UPP_ASCII && index <= LAST_UPP_ASCII) {
             // Add uppercase count to char count
-            result[index + 32] += result[index];
+            result[index + FIST_RELEVANT_ASCII] += result[index];
         } else {
             // Write count in file
             asciiChar = index;
