@@ -234,13 +234,13 @@ void processBatchInKernel(  char** d_data,
     // Execute the kernel
     kernelFunction<<< grid, threads, 0 >>>(*d_data, *d_result, nbLine, pitch);
     getLastCudaError("Kernel execution failed");
-
-    for (int i = 0; i < NB_ASCII; i++) {
-        h_result[i] = 0;
-    }
     
     // Copy result from device to host
     checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
+
+    for (int i = 0; i < NB_ASCII; i++) {
+        printf("%i\n", h_result[i]);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
