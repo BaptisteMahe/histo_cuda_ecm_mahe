@@ -37,7 +37,7 @@ void processBatchInKernel(  char** d_data,
                             int lineSize,
                             int** d_result,
                             int resultSize,
-                            int resultStorage[NB_ASCII]);
+                            int h_result[NB_ASCII]);
 
 void printHelper();
                             
@@ -190,7 +190,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
         nbLine++;
     }
     
-    // Process last Batch (< 2000 lines)
+    // Process last Batch (< MAX_LINE lines)
     printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
     processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, h_result);
     
