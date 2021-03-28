@@ -72,6 +72,7 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
 		int index = 0;
 		int currentLetter = line[index];
 
+        // Each char is converted to int and adds a unit to the corresponding index in the shared memory
 		while (currentLetter > 0) {
 	    	atomicAdd(&s_result[currentLetter], 1);
 	    	index++;
@@ -80,7 +81,7 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
 
         __syncthreads();
 
-        // Each first thread of a bloc add theire results to the global memory 
+        // Each first thread of a bloc add the results of its bloc to the global memory 
         if (tidb == 0) {
             for (int i = 0; i < NB_ASCII; i++) {
                 atomicAdd(&d_result[i], s_result[i]);
@@ -100,7 +101,6 @@ int main(int argc, char **argv) {
 	int c;
 	char *inputFileName = NULL;
 	char *outputFileName = NULL;
-
 	while ((c = getopt (argc, argv, "i:o:h")) != -1)
 		switch(c) {
 			case 'i':
@@ -192,11 +192,11 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     // Process last Batch (< MAX_LINE lines)
     printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
-    // processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, h_result);
+    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, h_result);
     
     fclose(inputFile);
     
-    //write the output
+    // Write the output
     writeOutputCSV(h_result, outputFileName);
 
     // Cleanup memory
