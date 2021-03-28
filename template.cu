@@ -216,7 +216,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 //! @param resultStorage output result of the computation as an array
 ////////////////////////////////////////////////////////////////////////////////
 
-int* processBatchInKernel(  char** d_data,
+void processBatchInKernel(  char** d_data,
                             char h_data[MAX_LINE][MAX_CHAR],
                             int nbLine,
                             size_t pitch,
