@@ -28,7 +28,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 void generateHisto(char* inputFileName, char* outputFileName);
 
-void writeOutputCSV(int result[NB_ASCII], char* outputFileName);
+void writeOutputCSV(int* result, char* outputFileName);
 
 void processBatchInKernel(  char** d_data,
                             char h_data[MAX_LINE][MAX_CHAR],
@@ -37,7 +37,7 @@ void processBatchInKernel(  char** d_data,
                             int lineSize,
                             int** d_result,
                             int resultSize,
-                            int h_result[NB_ASCII]);
+                            int* h_result);
 
 void printHelper();
                             
@@ -167,7 +167,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
     // Allocate host memory
     char h_data[MAX_LINE][MAX_CHAR];
-    int h_result[NB_ASCII];
+    int* h_result;
     char str[MAX_CHAR];
     int nbLine = 0;
     int batchNum = 1;
@@ -223,7 +223,7 @@ void processBatchInKernel(  char** d_data,
                             int lineSize,
                             int** d_result,
                             int resultSize,
-                            int h_result[NB_ASCII]) {
+                            int* h_result) {
     // Setup execution parameters
     dim3  grid((nbLine + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1, 1);
     dim3  threads(THREADS_PER_BLOCK, 1, 1);
@@ -236,7 +236,7 @@ void processBatchInKernel(  char** d_data,
     getLastCudaError("Kernel execution failed");
     
     // Copy result from device to host
-    checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,7 +245,7 @@ void processBatchInKernel(  char** d_data,
 //! @param outputFileName input file name to write in
 ////////////////////////////////////////////////////////////////////////////////
 
-void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
+void writeOutputCSV(int* result, char* outputFileName) {
 	FILE *outputFile;
 	char asciiChar;
 
@@ -261,7 +261,7 @@ void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
             // Add uppercase count to char count
             result[index + 32] += result[index];
         } else {
-            // Print count in file
+            // Write count in file
             asciiChar = index;
 		    fprintf(outputFile, "%c: %i\n", asciiChar, result[index]);
         }
