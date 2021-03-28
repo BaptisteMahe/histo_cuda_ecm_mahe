@@ -28,7 +28,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 void generateHisto(char* inputFileName, char* outputFileName);
 
-void writeOutputCSV(int* result, char* outputFileName);
+void writeOutputCSV(int result[NB_ASCII], char* outputFileName);
 
 void processBatchInKernel(  char** d_data,
                             char h_data[MAX_LINE][MAX_CHAR],
@@ -37,7 +37,7 @@ void processBatchInKernel(  char** d_data,
                             int lineSize,
                             int** d_result,
                             int resultSize,
-                            int** h_result);
+                            int h_result[NB_ASCII]);
 
 void printHelper();
                             
@@ -167,7 +167,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
     // Allocate host memory
     char h_data[MAX_LINE][MAX_CHAR];
-    int* h_result;
+    int h_result[NB_ASCII];
     char str[MAX_CHAR];
     int nbLine = 0;
     int batchNum = 1;
@@ -179,7 +179,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 		if (nbLine == MAX_LINE) {
 
             printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
-	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, &h_result);
+	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, h_result);
             
             nbLine = 0;
             batchNum++;
@@ -192,7 +192,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     // Process last Batch (< MAX_LINE lines)
     printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
-    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, &h_result);
+    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, h_result);
     
     fclose(inputFile);
     
@@ -223,7 +223,7 @@ void processBatchInKernel(  char** d_data,
                             int lineSize,
                             int** d_result,
                             int resultSize,
-                            int** h_result) {
+                            int h_result[NB_ASCII]) {
     // Setup execution parameters
     dim3  grid((nbLine + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1, 1);
     dim3  threads(THREADS_PER_BLOCK, 1, 1);
@@ -236,7 +236,7 @@ void processBatchInKernel(  char** d_data,
     getLastCudaError("Kernel execution failed");
     
     // Copy result from device to host
-    checkCudaErrors(cudaMemcpy(*h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,7 +245,7 @@ void processBatchInKernel(  char** d_data,
 //! @param outputFileName input file name to write in
 ////////////////////////////////////////////////////////////////////////////////
 
-void writeOutputCSV(int* result, char* outputFileName) {
+void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
 	FILE *outputFile;
 	char asciiChar;
 
