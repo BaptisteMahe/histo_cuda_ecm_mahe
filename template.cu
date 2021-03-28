@@ -36,7 +36,8 @@ void processBatchInKernel(  char** d_data,
                             size_t pitch,
                             int lineSize,
                             int** d_result,
-                            int resultSize);
+                            int resultSize,
+                            int resultStorage[NB_ASCII]);
 
 void printHelper();
                             
@@ -166,7 +167,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
     // Allocate host memory
     char h_data[MAX_LINE][MAX_CHAR];
-    int h_result[NB_ASCII];
+    int resultStorage[NB_ASCII];
     char str[MAX_CHAR];
     int nbLine = 0;
     int batchNum = 1;
@@ -178,7 +179,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 		if (nbLine == MAX_LINE) {
 
             printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
-	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize);
+	    	processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage);
             
             nbLine = 0;
             batchNum++;
@@ -191,12 +192,12 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     // Process last Batch (< MAX_LINE lines)
     printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
-    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize);
+    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, resultStorage);
     
     fclose(inputFile);
     
     // Write the output
-    writeOutputCSV(h_result, outputFileName);
+    writeOutputCSV(resultStorage, outputFileName);
 
     // Cleanup memory
     checkCudaErrors(cudaFree(d_data));
@@ -204,7 +205,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//! Send batch data to kernel and store the output in h_result
+//! Send batch data to kernel and store the output in resultStorage
 //! @param d_data input pointer to the allocated memory for the input data on the device
 //! @param h_data input the list of strings to process
 //! @param nbLine input number of lines to process for the current batch
@@ -212,16 +213,17 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 //! @param lineSize input size of a single line
 //! @param d_result input pointer to the allo
 //! @param resultSize input pointer to the allocated memory for the output data on the device
-//! @param h_result output result of the computation as an array
+//! @param resultStorage output result of the computation as an array
 ////////////////////////////////////////////////////////////////////////////////
 
-void processBatchInKernel(  char** d_data,
+int* processBatchInKernel(  char** d_data,
                             char h_data[MAX_LINE][MAX_CHAR],
                             int nbLine,
                             size_t pitch,
                             int lineSize,
                             int** d_result,
-                            int resultSize) {
+                            int resultSize,
+                            int resultStorage[NB_ASCII]) {
     int h_result[NB_ASCII];
 
     // Setup execution parameters
@@ -237,6 +239,11 @@ void processBatchInKernel(  char** d_data,
     
     // Copy result from device to host
     checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
+
+    // Copy the result into resultStorage
+    for (int index = 0; index < NB_ASCII; index++) {
+        resultStorage[index] = h_result[index];
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
