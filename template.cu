@@ -35,9 +35,9 @@ void processBatchInKernel(  char** d_data,
                             int nbLine,
                             size_t pitch,
                             int lineSize,
-                            int** d_result,
+                            unsigned long int** d_result,
                             int resultSize,
-                            int resultStorage[NB_ASCII]);
+                            unsigned long int resultStorage[NB_ASCII]);
 
 void printHelper();
 
@@ -176,7 +176,7 @@ int main(int argc, char **argv) {
 void generateHisto(char* inputFileName, char* outputFileName) {
     
     // Compute result and data sizes
-    unsigned int resultSize = NB_ASCII * sizeof(int);
+    unsigned int resultSize = NB_ASCII * sizeof(unsigned long int);
     unsigned int lineSize = MAX_CHAR * sizeof(char);
 
     // Load input file
@@ -190,7 +190,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
 
     // Allocate device memory
     char* d_data;
-    int* d_result;
+    unsigned long int* d_result;
     size_t pitch;
     checkCudaErrors(cudaMallocPitch((void **) &d_data, &pitch, lineSize, MAX_LINE));
     checkCudaErrors(cudaMalloc((void **) &d_result, resultSize));
@@ -251,7 +251,7 @@ void processBatchInKernel(  char** d_data,
                             int nbLine,
                             size_t pitch,
                             int lineSize,
-                            int** d_result,
+                            unsigned long int** d_result,
                             int resultSize,
                             unsigned long int resultStorage[NB_ASCII]) {
     // Allocate host memory for result
