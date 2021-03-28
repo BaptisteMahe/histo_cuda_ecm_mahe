@@ -192,7 +192,7 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     
     // Process last Batch (< MAX_LINE lines)
     printf("Batch N°%i: %i lines. \n", batchNum, nbLine);
-    processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, h_result);
+    // processBatchInKernel(&d_data, h_data, nbLine, pitch, lineSize, &d_result, resultSize, h_result);
     
     fclose(inputFile);
     
