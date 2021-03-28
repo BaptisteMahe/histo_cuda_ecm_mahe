@@ -152,7 +152,6 @@ void generateHisto(char* inputFileName, char* outputFileName) {
     // Load input file
     FILE *inputFile = NULL;
     inputFile = fopen(inputFileName, "r");
-
     if (!inputFile) {
         printf("Wrong input file\n");
         printHelper();
@@ -237,7 +236,7 @@ void processBatchInKernel(  char** d_data,
     getLastCudaError("Kernel execution failed");
     
     // Copy result from device to host
-    checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
+    // checkCudaErrors(cudaMemcpy(&h_result, *d_result, resultSize, cudaMemcpyDeviceToHost));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
