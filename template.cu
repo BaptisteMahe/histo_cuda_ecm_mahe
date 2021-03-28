@@ -40,9 +40,9 @@ void processBatchInKernel(  char** d_data,
                             int resultStorage[NB_ASCII]);
 
 void printHelper();
-                            
+
 ////////////////////////////////////////////////////////////////////////////////
-//! Kernel function to execute the computation in threads
+//! Kernel function to execute the computation in threads using only Global Memory
 //! @param d_data  input data in global memory
 //! @param d_result  output result as array in global memory
 //! @param nbLine  input size of the data in global memory
@@ -50,7 +50,36 @@ void printHelper();
 ////////////////////////////////////////////////////////////////////////////////
 
 __global__ 
-void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
+void kernelGlobalMem(char* d_data, int* d_result, int nbLine, size_t pitch) {
+    
+    const unsigned int tidb = threadIdx.x;
+    const unsigned int ti = blockIdx.x*blockDim.x + tidb;
+    
+    // Each thread compute a single line of the data
+    if (ti < nbLine) {
+		char* line = (char *)((char*)d_data + ti * pitch);
+		int index = 0;
+		int currentLetter = line[index];
+
+        // Each char is converted to int and adds a unit to the corresponding index in the global memory
+		while (currentLetter > 0) {
+	    	atomicAdd(&d_result[currentLetter], 1);
+	    	index++;
+	    	currentLetter = line[index];
+		}
+    }
+}
+                            
+////////////////////////////////////////////////////////////////////////////////
+//! Kernel function to execute the computation in threads using Shared & Global Memory
+//! @param d_data  input data in global memory
+//! @param d_result  output result as array in global memory
+//! @param nbLine  input size of the data in global memory
+//! @param pitch  input pitch size of in the data global memory
+////////////////////////////////////////////////////////////////////////////////
+
+__global__ 
+void kernelSharedMem(char* d_data, int* d_result, int nbLine, size_t pitch) {
     
     const unsigned int tidb = threadIdx.x;
     const unsigned int ti = blockIdx.x*blockDim.x + tidb;
@@ -90,8 +119,6 @@ void kernelFunction(char* d_data, int* d_result, int nbLine, size_t pitch) {
     }
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // Program main
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,12 +145,15 @@ int main(int argc, char **argv) {
 
 	printf("\n%s Starting...\n\n", argv[0]);
 
+    // Start timer
     StopWatchInterface *timer = 0;
     sdkCreateTimer(&timer);
     sdkStartTimer(&timer);
 
+    // Do the computation
 	generateHisto(inputFileName, outputFileName);
 
+    // Stop timer
     sdkStopTimer(&timer);
     printf("Processing time: %f (ms)\n\n", sdkGetTimerValue(&timer));
     sdkDeleteTimer(&timer);
@@ -234,7 +264,8 @@ void processBatchInKernel(  char** d_data,
     checkCudaErrors(cudaMemcpy2D(*d_data, pitch, h_data, lineSize, lineSize, MAX_LINE, cudaMemcpyHostToDevice));
     
     // Execute the kernel
-    kernelFunction<<< grid, threads, 0 >>>(*d_data, *d_result, nbLine, pitch);
+    kernelSharedMem<<< grid, threads, 0 >>>(*d_data, *d_result, nbLine, pitch);
+    // kernelGlobalMem<<< grid, threads, 0 >>>(*d_data, *d_result, nbLine, pitch);
     getLastCudaError("Kernel execution failed");
     
     // Copy result from device to host
@@ -253,15 +284,17 @@ void processBatchInKernel(  char** d_data,
 ////////////////////////////////////////////////////////////////////////////////
 
 void writeOutputCSV(int result[NB_ASCII], char* outputFileName) {
+
+    // Load output file
 	FILE *outputFile;
 	char asciiChar;
-
     if (outputFileName) {
         outputFile = fopen(outputFileName, "w+");
     } else {
         outputFile = fopen("out.csv", "w+");
     }
 	
+    // Write the result
 	for (int index = FIST_RELEVANT_ASCII; index <= LAST_RELEVANT_ASCII; index++) {
 
         if (index >= FIRST_UPP_ASCII && index <= LAST_UPP_ASCII) {
